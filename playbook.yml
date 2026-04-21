@@ -1,0 +1,43 @@
+- name: Deploy Podman container
+  hosts: servers
+  become: true
+
+  tasks:
+
+    - name: Install Podman
+      package:
+        name: podman
+        state: present
+
+    - name: Create volume directories on host
+      file:
+        path: "{{ item.split(':')[0] }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ volumes }}"
+
+    - name: Pull container image
+      containers.podman.podman_image:
+        name: "{{ image_name }}"
+        tag: "{{ image_tag }}"
+        state: present
+
+    - name: Run container
+      containers.podman.podman_container:
+        name: "{{ container_name }}"
+        image: "{{ image_name }}:{{ image_tag }}"
+        state: started
+        detach: true
+        ports: "{{ ports }}"
+        volumes: "{{ volumes }}"
+        env:
+          HF_TOKEN: "{{ vault_hf_token }}"
+
+    - name: Verify container is running
+      containers.podman.podman_container_info:
+        name: "{{ container_name }}"
+      register: container_info
+
+    - name: Print container status
+      debug:
+        msg: "Container '{{ container_name }}' is {{ container_info.containers[0].State.Status }}"

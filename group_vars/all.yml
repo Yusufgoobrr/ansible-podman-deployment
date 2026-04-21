@@ -1,0 +1,7 @@
+image_name: docker.io/yusufgoobrr/pulsedesk
+image_tag: latest
+container_name: my-app
+ports:
+  - "8080:8080"
+volumes:
+  - "/opt/my-app/data:/app/data"
